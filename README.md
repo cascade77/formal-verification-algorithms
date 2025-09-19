@@ -7,7 +7,7 @@ Formal verification of sorting algorithms using Lean4.
 To define sorting algorithms in Lean4 and prove their correctness (sortedness and length preservation).
 
 ## Project Structure
-
+```
 formal-sorting-verification/
 ├── FormalSortingVerification/
 │ └── Basic/
@@ -19,6 +19,7 @@ formal-sorting-verification/
 ├── lakefile.toml
 ├── lean-toolchain
 └── README.md
+```
 
 ## Notes
 
