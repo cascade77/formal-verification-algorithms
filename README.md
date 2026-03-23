@@ -11,10 +11,12 @@ from scratch.
 ```
 formal-verification-algorithms/
 ├── sorting/      # Sorted list properties verified in Lean4
-├── bst/          # Binary Search Trees verified in Rocq
+├── bst/          # Binary Search Trees and Red-Black Trees verified in Rocq
+│   ├── BST.v
+│   ├── RBT.v
+│   └── notes/
 └── README.md
 ```
-
 ---
 
 ## sorting/
@@ -46,12 +48,23 @@ Red-Black Trees. The BST ordering invariant is defined inductively and
 insertion is proved correct. Based on the 2-3 tree and Red-Black BST
 treatment from [Sedgewick & Wayne, Section 3.3](https://algs4.cs.princeton.edu/33balanced/).
 
+### BST.v
 **Lemma 1.** `all_keys_insert`. If all keys in a tree satisfy predicate P,
 and the inserted key also satisfies P, then all keys in the resulting tree
 still satisfy P.
 
 **Theorem 2.** `insert_bst`. If a tree satisfies the BST invariant, then
 inserting any key produces a tree that also satisfies the BST invariant.
+
+### RBT.v
+Defines the three structural invariants: no consecutive red links, perfect black balance, and BST ordering. Implements the three fix operations and insertion.
+
+**Definitions.** `color`, `rbtree`, `is_red`, `no_red_red`, `black_balanced`, `black_height`, `bst_rbt`.
+
+**Fix operations.** `rotate_left`, `rotate_right`, `flip_colors`, `fix_up`.
+
+**Insertion.** `rbt_insert_aux` inserts like a BST and applies `fix_up` on the way back up. `rbt_insert` forces the root black.
+
 
 ---
 
