@@ -14,6 +14,9 @@ formal-verification-algorithms/
 ├── bst/          # Binary Search Trees and Red-Black Trees verified in Rocq
 │   ├── BST.v
 │   ├── RBT.v
+│   └── notes/    
+├── block_decomposition/  # MPI block decomposition verified in Rocq
+│   ├── block_decomp.v
 │   └── notes/
 └── README.md
 ```
@@ -65,6 +68,18 @@ Defines the three structural invariants: no consecutive red links, perfect black
 
 **Insertion.** `rbt_insert_aux` inserts like a BST and applies `fix_up` on the way back up. `rbt_insert` forces the root black.
 
+
+---
+
+
+## block_decomposition/
+
+Formal verification of the block decomposition formulas used in MPI parallel programs, in Rocq. Proves that the standard BLOCK_LOW and BLOCK_HIGH formulas form a correct partition of indices across processes. Motivated by the open problem of applying formal methods to HPC correctness.
+
+### block_decomp.v
+**Lemma 1.** `block_low_zero`. The first process always starts at index 0.
+
+**Lemma 2.** `block_adjacent`. For any process i, the next process i+1 starts exactly one index after where process i ends.
 
 ---
 
