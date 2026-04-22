@@ -18,6 +18,9 @@ formal-verification-algorithms/
 ├── block_decomposition/  # MPI block decomposition verified in Rocq
 │   ├── block_decomp.v
 │   └── notes/
+├── mergesort/
+│   ├── MergeSort.v           # Merge, Split, Mergesort verified in Rocq
+│   └── notes/
 └── README.md
 ```
 ---
@@ -80,6 +83,42 @@ Formal verification of the block decomposition formulas used in MPI parallel pro
 **Lemma 1.** `block_low_zero`. The first process always starts at index 0.
 
 **Lemma 2.** `block_adjacent`. For any process i, the next process i+1 starts exactly one index after where process i ends.
+
+---
+
+
+
+## mergesort/
+
+Formal verification of mergesort in rocq. defines `merge`, `split`, and `mergesort`, then proves that merging two sorted lists gives a sorted list. the proof took a while to get right and this directory has notes on exactly what broke and why.
+
+### MergeSort.v
+
+**Definitions.**
+
+`sorted` is an inductive proposition with three constructors: `sorted_nil` for the empty list, `sorted_one` for a single element, and `sorted_cons` for two or more elements where the first is `<=` the second and the rest is also sorted.
+
+`merge` uses a nested `let fix` because the naive two-argument version fails rocq's termination checker. the outer function recurses on `l1`, the inner helper `merge_aux` recurses on `l2`.
+
+`mergesort_aux` takes an extra counter `n` as a fuel argument because after splitting, neither half is a syntactic subterm of the original list and rocq rejects the recursion. starting with `n = length l` and passing `n-1` each time gives rocq a structurally decreasing argument it can check.
+
+
+
+**Lemma 1-2.** `merge_l_le`, `merge_r_lt`: explicit rewrite lemmas for the two branches of merge. needed because `simpl` does not always reduce the nested `let fix` cleanly inside proofs.
+
+**Lemma 3-4.** `sorted_cons_inv`, `sorted_cons_inv'`: inversion helpers that extract inequalities and sub-sorted hypotheses from a sorted hypothesis.
+
+**Lemma 5.** `le_of_leb`: converts `Nat.leb a b = true` (a Bool) to `a <= b` (a Prop) using `Compare_dec.leb_complete`.
+
+**Lemma 6.** `merge_sorted_cons`: if `h <= hd h (merge l1 l2)` and `merge l1 l2` is sorted, then `h :: merge l1 l2` is sorted. used to reduce the main theorem to two cleaner subgoals.
+
+**Lemmas 7.** `sorted_head_le`: if a list is sorted and `x` is anywhere in the tail, then the head is `<= x`. proved by induction on the tail. uses `lia` for the transitivity step rather than `le_trans` directly, which avoids version-specific naming issues.
+
+**Lemmas 8.** `merge_In`: if `x` is in `merge l1 l2`, it came from `l1` or `l2`. proved by double induction, using `merge_l_le` and `merge_r_lt` to rewrite before each membership case split.
+
+**Theorem 1.** `merge_sorted`. if `l1` and `l2` are both sorted, then `merge l1 l2` is sorted.
+
+the proof does outer induction on `l1` and inner induction on `l2`. the two non-trivial cases are when both lists are non-empty. in each case, after rewriting with `merge_l_le` or `merge_r_lt`, the goal becomes `sorted (h :: merge ...)`. applying `merge_sorted_cons` splits this into two subgoals: proving the new head is `<=` the head of the merge result, and proving the merge result is sorted. the second subgoal is handled by the induction hypothesis. the first uses `merge_In` to trace where the head of the merge came from, then `sorted_head_le` to bound it.
 
 ---
 
