@@ -18,8 +18,11 @@ formal-verification-algorithms/
 ├── block_decomposition/  # MPI block decomposition verified in Rocq
 │   ├── block_decomp.v
 │   └── notes/
-├── mergesort/
-│   ├── MergeSort.v           # Merge, Split, Mergesort verified in Rocq
+├── mergesort/            # Mergesort verified in Rocq
+│   ├── MergeSort.v           
+│   └── notes/
+├── insertionsort/        # Insertion sort verified in Rocq
+│   ├── Insertionsort.v           
 │   └── notes/
 └── README.md
 ```
@@ -121,6 +124,34 @@ Formal verification of mergesort in rocq. defines `merge`, `split`, and `mergeso
 the proof does outer induction on `l1` and inner induction on `l2`. the two non-trivial cases are when both lists are non-empty. in each case, after rewriting with `merge_l_le` or `merge_r_lt`, the goal becomes `sorted (h :: merge ...)`. applying `merge_sorted_cons` splits this into two subgoals: proving the new head is `<=` the head of the merge result, and proving the merge result is sorted. the second subgoal is handled by the induction hypothesis. the first uses `merge_In` to trace where the head of the merge came from, then `sorted_head_le` to bound it.
 
 ---
+ 
+## insertionsort/
+ 
+Formal verification of insertion sort in Rocq. Defines `insert` and `isort`, proves membership is preserved in both directions, proves insert preserves sortedness, and proves isort always produces a sorted output. Uses the `In` predicate from Software Foundations Logic chapter directly as the membership specification.
+ 
+### Insertionsort.v
+ 
+**Definitions.**
+ 
+`sorted` is the same inductive proposition used in mergesort: `sorted_nil`, `sorted_one`, and `sorted_cons` with `x <= y` and a sorted tail.
+ 
+`insert` recurses on the list. On an empty list it returns `[a]`. On a cons cell `x :: rest` it checks `a <=? x`: if true it prepends `a` directly, otherwise it keeps `x` and recurses into the rest.
+ 
+`isort` recurses on the list. The empty list is already sorted. For `a :: rest` it inserts `a` into the result of sorting `rest`.
+ 
+**Lemma 1.** `insert_In`. If `x` is in `a :: l`, then `x` is in `insert a l`. Proved by induction on `l`, with `destruct (a <=? x') eqn:E` to case split on the comparison at each step.
+ 
+**Lemma 2.** `insert_In_rev`. If `x` is in `insert a l`, then `x` is in `a :: l`. The reverse direction of membership through insert.
+ 
+**Lemma 3.** `insert_sorted`. If `l` is sorted, then `insert a l` is sorted. The key idea is to induct directly on the proof of `sorted l` rather than on `l` itself. This avoids needing to invert sorted hypotheses manually and keeps the cases clean: `sorted_nil`, `sorted_one`, and `sorted_cons`.
+ 
+**Theorem 1.** `isort_sorted`. For all `l`, `sorted (isort l)`. Proved by induction on `l`. The cons case applies `insert_sorted` to the inductive hypothesis.
+ 
+**Theorem 2.** `isort_In`. For all `x` and `l`, `In x l <-> In x (isort l)`. Both directions proved by induction on `l`, using `insert_In` for the forward direction and `insert_In_rev` for the backward direction.
+ 
+---
+
+
 
 ## Tools
 
