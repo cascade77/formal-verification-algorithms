@@ -151,7 +151,33 @@ Formal verification of insertion sort in Rocq. Defines `insert` and `isort`, pro
  
 ---
 
+## mlfq/
 
+Formal verification of the Multi-Level Feedback Queue (MLFQ) scheduler in Rocq. The MLFQ is the scheduler described in [Chapter 8](https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf) of Operating Systems: Three Easy Pieces by Arpaci-Dusseau. Rather than requiring upfront knowledge of job length, MLFQ observes job behavior over time and adjusts priorities accordingly. This file formalizes the core rules as functions and proves structural correctness properties about them.
+
+### Mlfq.v
+
+**Definitions.**
+
+`process` is a record with three fields: `pid` (process identifier), `remaining_work` (how much CPU time the job still needs to finish), and `used_allotment` (how much of the current queue's time budget the job has consumed so far).
+
+`queue` is a record with two fields: `processes` (the list of processes currently sitting in this queue) and `allotment_limit` (the time budget for jobs at this priority level before they get demoted).
+
+`mlfq` is defined as `list queue`, ordered from highest to lowest priority. The head of the list is the highest priority queue.
+
+`job_enters` implements Rule 3: a new process is inserted at the front of the highest priority queue. Matches on the mlfq and prepends the process to the head queue's process list.
+
+`job_executes` implements Rule 4: one execution step for a process. If `used_allotment` equals `allotment_limit`, the process is demoted to the next queue with `used_allotment` reset to 0. Otherwise it stays in the same queue with `remaining_work` decremented and `used_allotment` incremented.
+
+`priority_boost` implements Rule 5: all processes from all queues are collected into the head queue using `List.flat_map`, and the remaining queues are emptied while preserving their allotment limits.
+
+**Theorem 1.** `job_enters_in_head`. For any process `p` and non-empty mlfq, after `job_enters p m`, `p` is in the processes of the head queue.
+
+**Theorem 2.** `job_executes_demotion`. If `used_allotment p = allotment_limit q0`, then `job_executes` moves the process to the next queue with `used_allotment` reset to 0.
+
+**Theorem 3.** `job_executes_same`. If `used_allotment p < allotment_limit q0`, then `job_executes` keeps the process in the same queue with `remaining_work` decremented and `used_allotment` incremented.
+
+**Theorem 4.** `priority_boost_In`. If a process `p` was in any queue in the mlfq before the boost, then after `priority_boost`, `p` is in the processes of the head queue.
 
 ## Tools
 
@@ -159,3 +185,4 @@ Formal verification of insertion sort in Rocq. Defines `insert` and `isort`, pro
 - [Lean4](https://lean-lang.org/)
 - [Software Foundations](https://softwarefoundations.cis.upenn.edu/)
 - [Algorithms 4th Edition](https://algs4.cs.princeton.edu/)
+- [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/)
