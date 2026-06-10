@@ -27,7 +27,12 @@ formal-verification-algorithms/
 ├── mlfq/                 # MLFQ scheduler verified in Rocq
 │   ├── Mlfq.v            
 │   └── notes/            
-└── README.md 
+└├── sjf/                      # Shortest Job First scheduler in Rocq
+│   └── Sjf.v
+├── lottery/                  # Lottery scheduler in Rocq
+│   └── Lottery.v
+└── README.md
+
 
 ```
 ---
@@ -182,6 +187,49 @@ Formal verification of the Multi-Level Feedback Queue (MLFQ) scheduler in Rocq. 
 **Theorem 3.** `job_executes_same`. If `used_allotment p < allotment_limit q0`, then `job_executes` keeps the process in the same queue with `remaining_work` decremented and `used_allotment` incremented.
 
 **Theorem 4.** `priority_boost_In`. If a process `p` was in any queue in the mlfq before the boost, then after `priority_boost`, `p` is in the processes of the head queue.
+
+## sjf/
+ 
+Formal verification of Shortest Job First scheduling in Rocq. Processes are modeled as records with a burst time. `run_sjf` is insertion sort by burst time. Proves the output is sorted, that no process is dropped or invented during scheduling, and that the resulting completion times are non-decreasing.
+
+### SJF.v
+ 
+**Lemma 1.** `insert_by_burst_In`. Insertion preserves membership (forward direction).
+ 
+**Lemma 2.** `insert_by_burst_In_rev`. Insertion preserves membership (reverse direction).
+ 
+**Lemma 3.** `insert_by_burst_sorted`. Inserting into a sorted list yields a sorted list.
+ 
+**Theorem 1.** `sjf_sorted`. For all l, `sorted_by_burst (run_sjf l)`.
+ 
+**Theorem 2.** `sjf_no_starvation`. For all p and l, `In p l -> In p (run_sjf l)`.
+ 
+**Theorem 3.** `sjf_no_starvation_rev`. For all p and l, `In p (run_sjf l) -> In p l`.
+ 
+**Theorem 4.** `completion_times_decreasing`. If l is sorted by burst, then `completion_times l t` has non-decreasing completion times.
+ 
+---
+ 
+## lottery/
+ 
+Formal verification of the Lottery Scheduler in Rocq. Described in [Chapter 9](https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-lottery.pdf) of Operating Systems: Three Easy Pieces. Each process holds a ticket count and a winner is selected by drawing a random number from the total pool. This file proves that entry adds the process to the lottery, that the winner found always comes from the list, that scheduling cannot grow the list, and that positive ticket invariants are preserved through both removal and replacement.
+
+### Lottery.v
+ 
+**Theorem 1.** `job_enters_adds`. For any p and l, `In p (job_enters p l)`.
+ 
+**Theorem 2.** `find_winner_in_list`. If `find_winner l n c = Some w`, then `In w l`.
+ 
+**Theorem 3.** `schedule_no_winner`. If `find_winner l 0 0 = None`, then `schedule l 0 = l`.
+ 
+**Theorem 4.** `schedule_length`. For all l and n, `length (schedule l n) <= length l`.
+ 
+**Lemma 1.** `remove_preserves_positive_tickets`. Removing a process preserves the positive ticket invariant.
+ 
+**Lemma 2.** `replace_preserves_positive_tickets`. Replacing a process preserves the positive ticket invariant, given the replacement also has positive tickets.
+ 
+---
+
 
 ## Tools
 
